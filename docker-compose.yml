@@ -1,0 +1,38 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: nabil
+        uid: 1004
+      context: ./docker
+      dockerfile: Dockerfile
+    image: mrp
+    container_name: mrp-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - frappe_default
+
+  mrp-nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - 9031:9031
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.mrp-nginx.entrypoints: websecure
+      traefik.http.routers.mrp-nginx.rule: Host(`mrplus.pttati.co.id`)
+      traefik.http.routers.mrp-nginx.tls.certresolver: main-resolver
+      traefik.http.services.nginx-service.loadbalancer.server.port: "9031"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx.app.conf:/etc/nginx/conf.d/app.conf
+    networks:
+      - frappe_default
+
+networks:
+  frappe_default:
+    external: true
